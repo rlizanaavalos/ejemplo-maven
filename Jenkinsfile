@@ -1,3 +1,5 @@
+
+  
 pipeline {
     agent any
 
@@ -6,9 +8,18 @@ pipeline {
             steps {
                 echo 'Compile'
                 script {
-                    dir('/home/rlizana/devops-usach/ejemplo-maven') {
-                        sh './mvnw clean compile -e'
-                    }
+                    sh './mvnw clean compile -e'
+                }
+            }
+        }
+        stage('SonarQube analysis') {
+            steps {
+                script {
+                // requires SonarQube Scanner 2.8+
+                scannerHome = tool 'sonar-scanner'
+                }
+                withSonarQubeEnv('Sonarqube-server') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=ejemplo-maven -Dsonar.java.binaries=build"
                 }
             }
         }
@@ -16,9 +27,7 @@ pipeline {
             steps {
                 echo 'Test'
                 script {
-                    dir('/home/rlizana/devops-usach/ejemplo-maven') {
-                        sh './mvnw clean test -e'
-                    }
+                    sh './mvnw clean test -e'
                 }
             }
         }
@@ -26,9 +35,7 @@ pipeline {
             steps {
                 echo 'Package'
                 script {
-                    dir('/home/rlizana/devops-usach/ejemplo-maven') {
-                        sh './mvnw clean package -e'
-                    }
+                    sh './mvnw clean package -e'
                 }
             }
         }
@@ -36,10 +43,8 @@ pipeline {
             steps {
                 echo 'Run'
                 script {
-                    dir('/home/rlizana/devops-usach/ejemplo-maven') {
-                        sh 'nohup bash mvnw spring-boot:run &'
-                        sleep(30)
-                    }
+                    sh 'nohup bash mvnw spring-boot:run &'
+                    sleep(30)
                 }
             }
         }
@@ -47,9 +52,7 @@ pipeline {
             steps {
                 echo 'TestApp'
                 script {
-                    dir('/home/rlizana/devops-usach/ejemplo-maven') {
-                        sh """curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"""
-                    }
+                    sh """curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"""
                 }
             }
         }
